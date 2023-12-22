@@ -3,7 +3,10 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11-slim
 LABEL maintainer="Max Mecklin <max@meckl.in>"
 LABEL authors="Max Mecklin <max@meckl.in>"
 
-RUN apt install git
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && apt-get purge -y --auto-remove \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/requirements.txt
 
