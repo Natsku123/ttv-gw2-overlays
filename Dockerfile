@@ -3,6 +3,8 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11-slim
 LABEL maintainer="Max Mecklin <max@meckl.in>"
 LABEL authors="Max Mecklin <max@meckl.in>"
 
+RUN apt install git
+
 COPY requirements.txt /app/requirements.txt
 
 WORKDIR /app
