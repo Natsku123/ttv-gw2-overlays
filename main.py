@@ -17,6 +17,11 @@ class Meta(BaseModel):
     build: str | None
 
 
+class GoldData(BaseModel):
+    current: str
+    target: str
+
+
 def custom_openapi():
     # Return "cached" API schema
     if app.openapi_schema:
@@ -72,7 +77,8 @@ async def gold(request: Request, *,
                apikey: str = Query(..., description="GW2 API key"),
                item: str | None = Query(None, description="Item ID"),
                text: str = Query("Gold", description="pre text"),
-               target: int = Query(0, description="target gold")
+               target: int = Query(0, description="target gold"),
+               interval: int = Query(60, description="Interval of update in seconds")
                ):
     api = pygw2.api.Api(api_key=apikey)
 
@@ -102,15 +108,36 @@ async def gold(request: Request, *,
         if isinstance(prices, Price) and prices.buys and prices.buys.unit_price:
             target = prices.buys.unit_price // (100 * 100)
 
+        if isinstance(prices, Price) and prices.sells and prices.sells.unit_price:
+            target = prices.sells.unit_price // (100 * 100)
+
         body = f"""
         <div class="Row">
-        <div class="Column"><p class="Text">Gold for {item_name} {gold_amount}/{target:n}</p></div>
+        <div class="Column"><p class="Text" id="text">Gold for {item_name} {gold_amount:n}/{target:n}</p></div>
         <div class="Column">{image}</div>
         </div>
         """
+
+        text = f"Gold for {item_name}"
+
+        params = f"""
+        new URLSearchParams({{
+            apikey: "{apikey}",
+            item: "{item}",
+        }})
+        """
     else:
         body = f"""
-        <h1>{text} {gold_amount}/{target:n}</h1>
+        <div class="Row">
+        <div class="Column"><p class="Text" id="text">{text} {gold_amount:n}/{target:n}</p></div>
+        </div>
+        """
+
+        params = f"""
+        new URLSearchParams({{
+            apikey: "{apikey}",
+            target: "{target}"
+        }})
         """
 
     css = """
@@ -140,10 +167,24 @@ async def gold(request: Request, *,
     </style>
     """
 
+    js = f"""
+    <script>
+    const text = "{text}";
+    async function updateText() {{
+        const textElem = document.getElementById("text");
+        const response = await fetch("/gold_data?" + {params});
+        const data = await response.json();
+        textElem.innerText = text + " " + data.current + "/" + data.target;
+    }}
+    setInterval(updateText, {interval}*1000)
+    </script>
+    """
+
     return f"""
         <html>
             <head>
                 {css}
+                {js}
                 <title>Gold overlay</title>
             </head>
             <body>
@@ -151,3 +192,43 @@ async def gold(request: Request, *,
             </body>
         </html>
         """
+
+
+@app.get("/gold_data", response_model=GoldData)
+async def gold(request: Request, *,
+               apikey: str = Query(..., description="GW2 API key"),
+               item: str | None = Query(None, description="Item ID"),
+               target: int = Query(0, description="target gold")
+               ):
+    api = pygw2.api.Api(api_key=apikey)
+
+    wallet = await api.account.wallet()
+
+    gold_obj = [x for x in wallet if x.id == 1]
+    gold_amount = gold_obj[0].value // (100 * 100)
+
+    languages = [x.split(";")[0] for x in request.headers["accept-language"].split(",")]
+
+    for language in languages:
+        try:
+            locale.setlocale(locale.LC_ALL, locale.normalize(language))
+            break
+        except:
+            pass
+
+    if item:
+        prices = await api.commerce.prices(item)
+
+        if isinstance(prices, list):
+            prices = prices[0]
+
+        if isinstance(prices, Price) and prices.buys and prices.buys.unit_price:
+            target = prices.buys.unit_price // (100 * 100)
+
+        if isinstance(prices, Price) and prices.sells and prices.sells.unit_price:
+            target = prices.sells.unit_price // (100 * 100)
+
+    return GoldData(**{
+        "current": f"{gold_amount:n}",
+        "target": f"{target:n}"
+    })
