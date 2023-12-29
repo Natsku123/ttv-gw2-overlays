@@ -154,7 +154,7 @@ async def gold(request: Request, *,
         .Text {
             font-size: 3em;
             color: #FFD700;
-            -webkit-text-stroke: 1px white;
+            -webkit-text-stroke: 2px white;
             font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; 
             font-weight: bold;
             background-color: #63C5DA;
@@ -171,7 +171,7 @@ async def gold(request: Request, *,
         .Text {
             font-size: 2em;
             color: #FFD700;
-            -webkit-text-stroke: 1px white;
+            -webkit-text-stroke: px white;
             font-family: "Lucida Console", "Courier New", monospace;
             font-weight: bold;
         }
