@@ -78,7 +78,8 @@ async def gold(request: Request, *,
                item: str | None = Query(None, description="Item ID"),
                text: str = Query("Gold", description="pre text"),
                target: int = Query(0, description="target gold"),
-               interval: int = Query(60, description="Interval of update in seconds")
+               interval: int = Query(60, description="Interval of update in seconds"),
+               hideicon: bool = Query(False, description="Hide item icon")
                ):
     api = pygw2.api.Api(api_key=apikey)
 
@@ -111,10 +112,17 @@ async def gold(request: Request, *,
         if isinstance(prices, Price) and prices.sells and prices.sells.unit_price:
             target = prices.sells.unit_price // (100 * 100)
 
+        if hideicon:
+            image_html = ""
+        else:
+            image_html = f"""
+            <div class="Column">{image}</div>
+            """
+
         body = f"""
         <div class="Row">
         <div class="Column"><p class="Text" id="text">Gold for {item_name} {gold_amount:n}/{target:n}</p></div>
-        <div class="Column">{image}</div>
+        {image_html}
         </div>
         """
 
