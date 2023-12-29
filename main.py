@@ -1,4 +1,5 @@
 import pygw2.api
+import pygw2.settings
 import locale
 from fastapi import FastAPI, Path, Query, Request
 from fastapi.openapi.utils import get_openapi
@@ -10,6 +11,8 @@ from config import settings
 from pydantic import BaseModel
 
 app = FastAPI(root_path=settings.ROOT_PATH)
+
+pygw2.settings.cache_time = 10
 
 
 class Meta(BaseModel):
@@ -82,6 +85,7 @@ async def gold(request: Request, *,
                hideicon: bool = Query(False, description="Hide item icon"),
                profile: str | None = Query(None, description="Color profile")
                ):
+
     api = pygw2.api.Api(api_key=apikey)
 
     wallet = await api.account.wallet()
