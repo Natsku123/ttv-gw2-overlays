@@ -79,7 +79,8 @@ async def gold(request: Request, *,
                text: str = Query("Gold", description="pre text"),
                target: int = Query(0, description="target gold"),
                interval: int = Query(60, description="Interval of update in seconds"),
-               hideicon: bool = Query(False, description="Hide item icon")
+               hideicon: bool = Query(False, description="Hide item icon"),
+               profile: str | None = Query(None, description="Color profile")
                ):
     api = pygw2.api.Api(api_key=apikey)
 
@@ -148,29 +149,51 @@ async def gold(request: Request, *,
         }})
         """
 
-    css = """
+    if profile == "Shay":
+        text_profile = """
+        .Text {
+            font-size: 3em;
+            color: #FFD700;
+            -webkit-text-stroke: 1px white;
+            font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; 
+            font-weight: bold;
+            background-color: #63C5DA;
+            background-image: linear-gradient(to left,#63C5DA, #E4A0F7, #FF69B4);
+            background-size: 100%;
+            -webkit-background-clip: text;
+            -moz-background-clip: text;
+            -webkit-text-fill-color: transparent; 
+            -moz-text-fill-color: transparent;
+        }
+        """
+    else:
+        text_profile = """
+        .Text {
+            font-size: 2em;
+            color: #FFD700;
+            -webkit-text-stroke: 1px white;
+            font-family: "Lucida Console", "Courier New", monospace;
+            font-weight: bold;
+        }
+        """
+
+    css = f"""
     <style>
-        .Row {
+        .Row {{
         display: table;
-    }
-    .Column {
+    }}
+    .Column {{
         display: table-cell;
         padding-left: 5px;
         padding-right: 5px;
         text-align: center;
         vertical-align: middle;
-    }
-    .Text {
-        font-size: 2em;
-        color: #FFD700;
-        -webkit-text-stroke: 1px white;
-        font-family: "Lucida Console", "Courier New", monospace;
-        font-weight: bold;
-    }
+    }}
+    {text_profile}
     
-    body {
+    body {{
         background-color: transparent;
-    }
+    }}
 
     </style>
     """
